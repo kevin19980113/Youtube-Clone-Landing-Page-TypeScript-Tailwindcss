@@ -7,28 +7,13 @@ import { IoMic } from "react-icons/io5";
 import { CiSearch } from "react-icons/ci";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
+import { useSidebarContext } from "../contexts/SidebarContext";
 
 export function PageHeader() {
   const [showfullWidthSearch, setshowfullWidthSearch] = useState(false);
-
   return (
     <header className="flex gap-10 lg:gap-20 justify-between pt-2 mb-6 mx-4">
-      <section
-        className={`gap-4 items-center flex-shrink-0 ${
-          showfullWidthSearch ? "hidden" : "flex"
-        }`}
-      >
-        <Button size="icon" variant="ghost">
-          <IoMdMenu className="size-6" />
-        </Button>
-        <a href="/" className="flex items-center gap-1 relative">
-          <img src={logoImg} alt="logo" className="h-8" />
-          <span className="text-2xl font-medium tracking-tighter">YouTube</span>
-          <span className="text-xs text-bold text-gray-500 absolute top-0 right-0 translate-x-4">
-            CA
-          </span>
-        </a>
-      </section>
+      <HeaderFirstSection showfullWidthSearch={showfullWidthSearch} />
 
       <form
         className={`gap-4 flex-grow justify-center ${
@@ -65,7 +50,7 @@ export function PageHeader() {
         </Button>
       </form>
 
-      <section
+      <div
         className={`flex-shrink-0 items-center gap-1 ${
           showfullWidthSearch ? " hidden" : " flex"
         }`}
@@ -90,7 +75,34 @@ export function PageHeader() {
         <Button size="icon" variant="ghost">
           <FaRegUserCircle className="size-5" />
         </Button>
-      </section>
+      </div>
     </header>
+  );
+}
+type HeaderFirstSectionProps = {
+  showfullWidthSearch?: boolean;
+};
+
+export function HeaderFirstSection({
+  showfullWidthSearch,
+}: HeaderFirstSectionProps) {
+  const { toggle } = useSidebarContext();
+  return (
+    <div
+      className={`gap-3 items-center flex-shrink-0 ${
+        showfullWidthSearch ? "hidden" : "flex"
+      }`}
+    >
+      <Button size="icon" variant="ghost" onClick={toggle}>
+        <IoMdMenu className="size-6" />
+      </Button>
+      <a href="/" className="flex items-center gap-1 relative">
+        <img src={logoImg} alt="logo" className="h-8" />
+        <span className="text-2xl font-medium tracking-tighter">YouTube</span>
+        <span className="text-xs text-bold text-gray-500 absolute top-0 right-0 translate-x-4">
+          CA
+        </span>
+      </a>
+    </div>
   );
 }
