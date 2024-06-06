@@ -60,7 +60,7 @@ export function Sidebar() {
     <>
       <aside
         className={
-          "sticky top-0 overflow-y-auto scrollbar-hidden pb-4 flex flex-col ml-1"
+          "sticky left-0 overflow-y-auto scrollbar-hidden pb-4 flex flex-col ml-1"
         }
       >
         <SmallSidebarItem Icon={Home} title="Home" url="/" />
@@ -81,7 +81,7 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`w-60 absolute top-0 overflow-y-auto scrollbar-hidden pb-4 flex-col gap-2 px-2 
+        className={`w-60 absolute top-0 overflow-y-auto pb-4 flex-col gap-2 px-2 
         z-[200] bg-white max-h-screen transition-all duration-300 ${
           isSidebarOpen ? "left-0" : "-left-full"
         }`}
@@ -104,7 +104,7 @@ export function Sidebar() {
           />
         </LargeSidebarSection>
         <hr />
-        <LargeSidebarSection title="You" visibleItemCount={5}>
+        <LargeSidebarSection title="You">
           <LargeSidebarItem
             IconOrImgUrl={Library}
             title="Library"
@@ -226,7 +226,7 @@ type LargeSidebarSectionProps = {
 function LargeSidebarSection({
   children,
   title,
-  visibleItemCount = Number.POSITIVE_INFINITY,
+  visibleItemCount = 5,
 }: LargeSidebarSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const childrenArray = Children.toArray(children).flat();

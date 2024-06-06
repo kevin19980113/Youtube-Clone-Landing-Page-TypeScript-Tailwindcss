@@ -1,6 +1,7 @@
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Button } from "./Button";
 import { useEffect, useRef, useState } from "react";
+import ResizeObserver from "resize-observer-polyfill";
 
 type CategoryPhillProps = {
   categories: string[];
@@ -10,7 +11,7 @@ type CategoryPhillProps = {
 
 const TRANSLATE_AMOUNT = 300;
 
-export function CateogryPills({
+export function CategoryPills({
   categories,
   selectedCategory,
   onSelect,
@@ -18,18 +19,23 @@ export function CateogryPills({
   const [isLeftVisible, setIsLeftVisible] = useState(false);
   const [isRightVisible, setIsRightVisible] = useState(false);
   const [translate, setTranslate] = useState(0);
+  const [actualWidth, setActualWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (containerRef.current == null) return;
 
+    setActualWidth(containerRef.current.scrollWidth);
+  }, [categories]);
+
+  useEffect(() => {
+    if (containerRef.current == null) return;
+
     const observer = new ResizeObserver((entries) => {
-      const container = entries[0]?.target;
+      const container = entries[0]?.target as HTMLDivElement;
 
       setIsLeftVisible(translate > 0);
-      setIsRightVisible(
-        translate + container.clientWidth < container.scrollWidth
-      );
+      setIsRightVisible(translate + container.clientWidth < actualWidth);
     });
 
     observer.observe(containerRef.current);
@@ -37,13 +43,15 @@ export function CateogryPills({
     return () => {
       observer.disconnect();
     };
-  }, [categories, translate]);
+  });
 
   return (
     <div className="overflow-x-hidden relative" ref={containerRef}>
       <div
         className="flex whitespace-nowrap gap-3 transition-transform w-[max-content]"
-        style={{ transform: `translateX(-${translate}px)` }}
+        style={{
+          transform: `translateX(-${translate}px)`,
+        }}
       >
         {categories.map((category) => (
           <Button
@@ -91,7 +99,6 @@ export function CateogryPills({
                 if (containerRef.current === null) return translate;
 
                 const newTranslate = translate + TRANSLATE_AMOUNT;
-                const actualWidth = containerRef.current.scrollWidth;
                 const visibleWidth = containerRef.current.clientWidth;
 
                 if (newTranslate + visibleWidth >= actualWidth) {

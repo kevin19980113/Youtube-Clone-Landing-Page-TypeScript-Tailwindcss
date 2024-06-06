@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { formatDuation } from "../utils/formatDuration";
+import { formatDuration } from "../utils/formatDuration";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 
 type VideoGridItemProps = {
@@ -64,19 +64,19 @@ export function VideoGridItem({
           className="absolute bottom-1 right-1 bg-secondary-dark text-secondary text-xs
         px-1 rounded-md"
         >
-          {formatDuation(duration)}
+          {formatDuration(duration)}
         </div>
         <video
           ref={videoRef}
           muted
           playsInline
           src={videoUrl}
-          className={`block h-full object-cover 
-        absolute inset-0 transition-opacity duration-200 delay-200 ${
-          isVideoPlaying ? "opacity-100" : "opacity-0"
-        }`}
+          className={`block h-full object-cover absolute inset-0 transition-opacity duration-200 delay-200 ${
+            isVideoPlaying ? "opacity-100" : "opacity-0"
+          }`}
         ></video>
       </a>
+
       <div className="flex gap-2">
         <a href={`/@${channel.id}`} className="flex-shrink-0">
           <img
