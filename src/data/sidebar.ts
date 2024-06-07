@@ -24,10 +24,10 @@ export const subscriptions = [
       "https://yt3.ggpht.com/ytc/APkrFKa6XiLa13mMVPzkmmTBcgNPjjqCGPrY86KfJFmf5w=s48-c-k-c0x00ffffff-no-rj",
   },
   {
-    channelName: "Sonny Sangha",
-    id: "SonnySangha",
+    channelName: "Netflix",
+    id: "Netflix",
     imgUrl:
-      "https://yt3.ggpht.com/FjeN785fVWx0Pr6xCbwPhhq8hHj_gocc3FygDXYDEQgp2gE_FQzRNsFHFAjQ3oE-VJaeGR1a=s68-c-k-c0x00ffffff-no-rj",
+      "https://yt3.googleusercontent.com/c5D1xS3wEG2XDLhBaW_4VCJ081qcT5rxo7X3DO-0zabsBntw_D58KwiTXThWZaizcYNmpSMhRQ=s160-c-k-c0x00ffffff-no-rj",
   },
   {
     channelName: "Traversy Media",

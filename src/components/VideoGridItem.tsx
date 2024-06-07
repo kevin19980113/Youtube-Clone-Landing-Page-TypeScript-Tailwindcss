@@ -2,19 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "../utils/formatDuration";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 
-type VideoGridItemProps = {
+export type VideoGridItemProps = {
   id: string;
   title: string;
   channel: {
     name: string;
     id: string;
-    profileUrl: string;
+    profileThumbnailUrl: string | undefined;
+    channelUrl: string | undefined;
   };
-  views: number;
+  views: string;
   postedAt: Date;
-  duration: number;
+  duration: string;
   thumbnailUrl: string;
-  videoUrl: string;
+  //videoUrl: string;
 };
 
 const VIEW_FORMATTER = Intl.NumberFormat(undefined, {
@@ -29,7 +30,6 @@ export function VideoGridItem({
   postedAt,
   duration,
   thumbnailUrl,
-  videoUrl,
 }: VideoGridItemProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -48,7 +48,7 @@ export function VideoGridItem({
   return (
     <div className="flex flex-col gap-2">
       <a
-        href={`/watch?v=${id}`}
+        href={`https://www.youtube.com/watch?v=${id}`}
         className="relative aspect-video"
         onMouseEnter={() => setIsVideoPlaying(true)}
         onMouseLeave={() => setIsVideoPlaying(false)}
@@ -66,7 +66,8 @@ export function VideoGridItem({
         >
           {formatDuration(duration)}
         </div>
-        <video
+
+        {/* <video
           ref={videoRef}
           muted
           playsInline
@@ -74,33 +75,36 @@ export function VideoGridItem({
           className={`block h-full object-cover absolute inset-0 transition-opacity duration-200 delay-200 ${
             isVideoPlaying ? "opacity-100" : "opacity-0"
           }`}
-        ></video>
+        ></video> */}
       </a>
 
       <div className="flex gap-2">
-        <a href={`/@${channel.id}`} className="flex-shrink-0">
+        <a
+          href={`https://www.youtube.com/${channel.channelUrl}`}
+          className="flex-shrink-0"
+        >
           <img
-            src={channel.profileUrl}
+            src={channel.profileThumbnailUrl}
             alt="profile photo"
             className="w-10 h-10 rounded-full"
           />
         </a>
         <div className="flex flex-col gap-0.5 text-secondary-text text-sm">
           <a
-            href={`/watch?v=${id}`}
-            className="text-secondary-dark font-semibold text-base"
+            href={`https://www.youtube.com/watch?v=${id}`}
+            className="text-secondary-dark hover:text-secondary-dark-hover font-semibold text-base"
           >
             {title}
           </a>
           <a
-            href={`/@${channel.id}`}
+            href={`https://www.youtube.com/${channel.channelUrl}`}
             className="hover:text-secondary-dark-hover max-w-fit"
           >
             {channel.name}
           </a>
-          <div>{`${VIEW_FORMATTER.format(views)} views • ${formatTimeAgo(
-            postedAt
-          )}`}</div>
+          <div>{`${VIEW_FORMATTER.format(
+            Number(views)
+          )} views • ${formatTimeAgo(postedAt)}`}</div>
         </div>
       </div>
     </div>

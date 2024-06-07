@@ -1,13 +1,19 @@
 import { CategoryPills } from "./components/CategoryPhills";
 import { PageHeader } from "./layouts/PageHeader";
-import { categories, videos } from "./data/home";
+import { categories } from "./data/home";
 import { useState } from "react";
 import { VideoGridItem } from "./components/VideoGridItem";
 import { Sidebar } from "./layouts/Sidebar";
 import { SidebarProvider } from "./contexts/SidebarContext";
+import { useFetchPopularVideos } from "./hooks/useFetchData.tsx";
+import { dataProcessor } from "./hooks/useFetchData.tsx";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const { isLoading, videoes, channels } = useFetchPopularVideos();
+
+  const processedVideoes =
+    videoes && channels ? dataProcessor(videoes, channels) : null;
 
   return (
     <SidebarProvider>
@@ -23,11 +29,14 @@ function App() {
                 onSelect={setSelectedCategory}
               />
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
-              {videos.map((video) => (
-                <VideoGridItem key={video.id} {...video} />
-              ))}
-            </div>
+            {!isLoading && (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+                {processedVideoes?.map((video) => (
+                  <VideoGridItem key={video.id} {...video} />
+                ))}
+              </div>
+            )}
+            {isLoading && <div>loading,,,</div>}
           </div>
         </section>
       </main>
