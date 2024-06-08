@@ -24,7 +24,7 @@ type FetchedData = {
 };
 
 type DataContextType = {
-  data: FetchedData[] | undefined;
+  data: FetchedData[];
   isLoading: boolean;
   setFetchedData: (searchedData: FetchedData[]) => void;
   setLoading: (loading: boolean) => void;
@@ -37,7 +37,7 @@ type DataContextProviderProps = {
 };
 
 export function DataContextProvider({ children }: DataContextProviderProps) {
-  const [data, setData] = useState<FetchedData[] | null[]>(
+  const [data, setData] = useState<FetchedData[]>(
     new Array(maxSearchResults).fill(null)
   );
   const [isLoading, setIsLoading] = useState(true);
