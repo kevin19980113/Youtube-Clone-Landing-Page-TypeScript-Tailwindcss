@@ -16,6 +16,7 @@ export type VideoGridItemProps = {
   duration: string;
   thumbnailUrl: string;
   //videoUrl: string;
+  isLoading: boolean;
 };
 
 const VIEW_FORMATTER = Intl.NumberFormat(undefined, {
@@ -30,6 +31,7 @@ export function VideoGridItem({
   postedAt,
   duration,
   thumbnailUrl,
+  isLoading,
 }: VideoGridItemProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -45,6 +47,25 @@ export function VideoGridItem({
     }
   }, [isVideoPlaying]);
 
+  if (isLoading) {
+    return (
+      <div className="animate-pulse flex flex-col gap-2">
+        <div className="aspect-video bg-neutral-400 rounded-lg"></div>
+        <div className="flex gap-2">
+          <div className="size-10 rounded-full bg-neutral-400"></div>
+          <div className="flex flex-col gap-1 w-full">
+            <div className="w-full h-4 bg-neutral-400 rounded-lg"></div>
+            <div className="w-full h-3 bg-neutral-400 rounded-lg"></div>
+            <div className="flex gap-1 w-full">
+              <div className="w-1/2 h-3 bg-neutral-400 rounded-lg"></div>
+              <div className="w-1/2 h-3 bg-neutral-400 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <a
@@ -59,6 +80,7 @@ export function VideoGridItem({
           className={`block w-full object-cover transition-[border-radius] duration-200 ${
             isVideoPlaying ? "rounded-none" : "rounded-2xl"
           }`}
+          loading="lazy"
         />
         <div
           className="absolute bottom-1 right-1 bg-secondary-dark text-secondary text-xs
@@ -87,6 +109,7 @@ export function VideoGridItem({
             src={channel.profileThumbnailUrl}
             alt="profile photo"
             className="w-10 h-10 rounded-full"
+            loading="lazy"
           />
         </a>
         <div className="flex flex-col gap-0.5 text-secondary-text text-sm">

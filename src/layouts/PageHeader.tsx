@@ -5,12 +5,35 @@ import { FaRegBell, FaRegUserCircle } from "react-icons/fa";
 import { RiVideoUploadLine } from "react-icons/ri";
 import { IoMic } from "react-icons/io5";
 import { CiSearch } from "react-icons/ci";
-import { useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import { useSidebarContext } from "../contexts/SidebarContext";
+import { fetchSearchVideoData } from "../utils/http";
+import { useDataContext } from "../contexts/DataContext";
 
 export function PageHeader() {
   const [showfullWidthSearch, setshowfullWidthSearch] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { setFetchedData, setLoading } = useDataContext();
+
+  async function searchHandler(e: FormEvent) {
+    e.preventDefault();
+    const searchTerm = inputRef.current?.value;
+
+    if (searchTerm == null) return;
+
+    setLoading(true);
+    try {
+      const processData = await fetchSearchVideoData(searchTerm);
+      setFetchedData(processData);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      }
+    }
+    setLoading(false);
+  }
+
   return (
     <header className="flex gap-10 lg:gap-20 justify-between pt-2 mb-6 mx-4 sticky top-0">
       <HeaderFirstSection showfullWidthSearch={showfullWidthSearch} />
@@ -19,6 +42,7 @@ export function PageHeader() {
         className={`gap-4 flex-grow justify-center ${
           showfullWidthSearch ? "flex" : "hidden md:flex"
         }`}
+        onSubmit={(e) => searchHandler(e)}
       >
         {showfullWidthSearch && (
           <Button
@@ -33,10 +57,12 @@ export function PageHeader() {
         )}
         <div className="flex flex-grow max-w-[600px]">
           <input
+            name="search"
             type="search"
             placeholder="search"
             className="rounded-l-full border border-secondary-border shadow-inner shadow-secondary 
             py-1 px-4 text-lg w-full focus:border-blue-600 outline-none"
+            ref={inputRef}
           />
           <Button
             className="py-2 px-4 rounded-r-full border-secondary-border border border-l-0
