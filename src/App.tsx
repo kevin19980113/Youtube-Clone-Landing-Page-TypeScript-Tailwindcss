@@ -1,7 +1,7 @@
 import { CategoryPills } from "./components/CategoryPhills";
 import { PageHeader } from "./layouts/PageHeader";
 import { categories } from "./data/home";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Sidebar } from "./layouts/Sidebar";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { DataContextProvider } from "./contexts/DataContext.tsx";
@@ -25,7 +25,9 @@ function App() {
                   onSelect={setSelectedCategory}
                 />
               </div>
-              <VideoGridItemWrapper />
+              <Suspense>
+                <VideoGridItemWrapper />
+              </Suspense>
             </div>
           </section>
         </main>

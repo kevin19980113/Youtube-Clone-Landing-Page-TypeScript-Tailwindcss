@@ -6,6 +6,7 @@ import {
   useEffect,
 } from "react";
 import { fetchPopularVideoData } from "../utils/http";
+import { maxSearchResults } from "../utils/http";
 
 type FetchedData = {
   id: string;
@@ -36,7 +37,9 @@ type DataContextProviderProps = {
 };
 
 export function DataContextProvider({ children }: DataContextProviderProps) {
-  const [data, setData] = useState<FetchedData[]>();
+  const [data, setData] = useState<FetchedData[] | null[]>(
+    new Array(maxSearchResults).fill(null)
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
