@@ -20,6 +20,7 @@ export function PageHeader() {
     setNextPageToken,
     setNewAction,
     setNewSearchTerm,
+    setSelectedCategory,
   } = useDataContext();
 
   async function searchHandler(e: FormEvent) {
@@ -46,6 +47,7 @@ export function PageHeader() {
       }
     } finally {
       setLoading(false);
+      setSelectedCategory("All");
     }
   }
 

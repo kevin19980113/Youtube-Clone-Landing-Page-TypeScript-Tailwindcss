@@ -12,6 +12,7 @@ type FetchedVideoData = {
   id: string;
   title: string;
   description: string;
+  category: string;
   channel: {
     name: string;
     id: string;
@@ -33,11 +34,13 @@ type DataContextType = {
   data: Data;
   isLoading: boolean;
   action: string;
+  selectedCategory: string;
   setLoading: (loading: boolean) => void;
   setSearchedData: (searchedData: FetchedVideoData[]) => void;
   setNewSearchTerm: (searchTerm: string) => void;
   setNextPageToken: (newToken: string) => void;
   setNewAction: (newAction: string) => void;
+  setSelectedCategory: (selectedCategory: string) => void;
   loadMoreData: () => void;
 };
 
@@ -56,6 +59,7 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [nextPageToken, setNewToken] = useState<string | null>(null);
   const [action, setAction] = useState<string>("POPULAR");
+  const [selectedCategory, setCategory] = useState<string>("All");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,7 +67,6 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
         const { processedData, nextToken } = await fetchPopularVideoData(
           nextPageToken
         );
-
         setData((prevData) => {
           return {
             ...prevData,
@@ -105,6 +108,10 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
 
   function setNewAction(newAction: string) {
     setAction(newAction);
+  }
+
+  function setSelectedCategory(selectedCategory: string) {
+    setCategory(selectedCategory);
   }
 
   function loadMoreData() {
@@ -169,11 +176,13 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
     data,
     isLoading,
     action,
+    selectedCategory,
     setNewSearchTerm,
     setSearchedData,
     setNextPageToken,
     setLoading,
     setNewAction,
+    setSelectedCategory,
     loadMoreData,
   };
 

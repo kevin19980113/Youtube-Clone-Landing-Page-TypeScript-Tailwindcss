@@ -2,7 +2,8 @@ const API_KEY = import.meta.env.VITE_REACT_APP_API_KEY;
 const API_URL_FOR_VIDEO = "https://www.googleapis.com/youtube/v3/videos";
 const API_URL_FOR_CHANNEL = "https://www.googleapis.com/youtube/v3/channels";
 const API_URL_FOR_SEARCH = "https://www.googleapis.com/youtube/v3/search";
-
+const API_URL_FOR_CATEGORY =
+  "https://www.googleapis.com/youtube/v3/videoCategories";
 export const maxSearchResults = 15;
 
 type VideoSnippet = {
@@ -16,6 +17,7 @@ type VideoSnippet = {
       url: string;
     };
   };
+  categoryId: string;
 };
 
 type videoContentDetails = {
@@ -65,13 +67,22 @@ type SearchedData = {
   nextPageToken: string;
 };
 
+type CategoryData = {
+  id: string;
+  snippet: {
+    title: string;
+  };
+};
+
 function dataProcessor(
   videos: VideoData[],
-  channels: ChannelData[]
+  channels: ChannelData[],
+  categories: CategoryData[]
 ): {
   id: string;
   title: string;
   description: string;
+  category: string;
   channel: {
     name: string;
     id: string;
@@ -86,11 +97,15 @@ function dataProcessor(
   return videos
     .map((video) => {
       const channel = channels.find((ch) => ch.id === video.snippet.channelId);
-      if (channel !== undefined) {
+      const category = categories.find(
+        (category) => category.id === video.snippet.categoryId
+      );
+      if (channel !== undefined && category !== undefined) {
         return {
           id: video.id,
           title: video.snippet.title,
           description: video.snippet.description,
+          category: category.snippet.title,
           channel: {
             name: video.snippet.channelTitle,
             id: video.snippet.channelId,
@@ -140,8 +155,30 @@ export async function fetchPopularVideoData(nextPageToken: string | null) {
     (response) => response.items
   ) as ChannelData[];
 
-  const processedData = dataProcessor(videoData.items, channelData);
+  const categoryIds = videoData.items.map((video) => video.snippet.categoryId);
 
+  const categoryIdPromises = categoryIds.map((categoryId) =>
+    fetch(
+      `${API_URL_FOR_CATEGORY}?part=snippet&id=${categoryId}&key=${API_KEY}`
+    ).then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch category data");
+      }
+      return response.json();
+    })
+  );
+
+  const categoryResponses = await Promise.all(categoryIdPromises);
+
+  const categoryData = categoryResponses.flatMap(
+    (response) => response.items
+  ) as CategoryData[];
+
+  const processedData = dataProcessor(
+    videoData.items,
+    channelData,
+    categoryData
+  );
   return { processedData, nextToken: videoData.nextPageToken };
 }
 
@@ -202,7 +239,26 @@ export async function fetchSearchVideoData(
     (response) => response.items
   ) as ChannelData[];
 
-  const processedData = dataProcessor(videoData, channelData);
+  const categoryIds = videoData.map((video) => video.snippet.categoryId);
+
+  const categoryIdPromises = categoryIds.map((categoryId) =>
+    fetch(
+      `${API_URL_FOR_CATEGORY}?part=snippet&id=${categoryId}&key=${API_KEY}`
+    ).then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch category data");
+      }
+      return response.json();
+    })
+  );
+
+  const categoryResponses = await Promise.all(categoryIdPromises);
+
+  const categoryData = categoryResponses.flatMap(
+    (response) => response.items
+  ) as CategoryData[];
+
+  const processedData = dataProcessor(videoData, channelData, categoryData);
 
   return { processedData, nextToken: searchedData.nextPageToken };
 }
