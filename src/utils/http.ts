@@ -83,6 +83,7 @@ function dataProcessor(
   title: string;
   description: string;
   category: string;
+  categoryId: string;
   channel: {
     name: string;
     id: string;
@@ -106,6 +107,7 @@ function dataProcessor(
           title: video.snippet.title,
           description: video.snippet.description,
           category: category.snippet.title,
+          categoryId: category.id,
           channel: {
             name: video.snippet.channelTitle,
             id: video.snippet.channelId,
@@ -123,10 +125,15 @@ function dataProcessor(
     .filter((item): item is NonNullable<typeof item> => item !== undefined);
 }
 
-export async function fetchPopularVideoData(nextPageToken: string | null) {
+export async function fetchPopularVideoData(
+  nextPageToken: string | null,
+  categoryId: string | null
+) {
   const response = await fetch(
     `${API_URL_FOR_VIDEO}?part=statistics&part=contentDetails&part=snippet&chart=mostPopular${
       nextPageToken ? `&pageToken=${nextPageToken}` : ""
+    }${
+      categoryId ? `&videoCategoryId=${categoryId}` : ""
     }&maxResults=${maxSearchResults}&key=${API_KEY}`
   );
 
@@ -184,11 +191,14 @@ export async function fetchPopularVideoData(nextPageToken: string | null) {
 
 export async function fetchSearchVideoData(
   searchTerm: string,
-  nextPageToken: string | null
+  nextPageToken: string | null,
+  categoryId: string | null
 ) {
   const response = await fetch(
     `${API_URL_FOR_SEARCH}?part=snippet${
       nextPageToken ? `&pageToken=${nextPageToken}` : ""
+    }${
+      categoryId ? `&type=video&videoCategoryId=${categoryId}` : ""
     }&maxResults=${maxSearchResults}&q=${searchTerm}&type=video&key=${API_KEY}`
   );
   const searchedData = (await response.json()) as SearchedData;

@@ -7,7 +7,7 @@ import { SearchResultsGridItem } from "../components/SearchResultsGridItem";
 
 export default function VideoGridItemWrapper() {
   const { state, loadMoreData } = useDataContext();
-  const { data, isLoading, action } = state;
+  const { videoData, isLoading, action } = state;
   const lastCardObserver = useRef<IntersectionObserver | null>(null);
 
   const lastVideoElementRef = useCallback(
@@ -35,8 +35,8 @@ export default function VideoGridItemWrapper() {
   if (action === "POPULAR") {
     return (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
-        {data.popularVideoData.map((video, index) => {
-          if (data.popularVideoData.length === index + 1) {
+        {videoData.map((video, index) => {
+          if (videoData.length === index + 1) {
             return (
               <PopularVideoGridItem
                 ref={lastVideoElementRef}
@@ -63,8 +63,8 @@ export default function VideoGridItemWrapper() {
   if (action === "SEARCH") {
     return (
       <div className="flex flex-col gap-4 items-center">
-        {data.searchVideoData.map((video, index) => {
-          if (data.searchVideoData.length === index + 1) {
+        {videoData.map((video, index) => {
+          if (videoData.length === index + 1) {
             return (
               <SearchResultsGridItem
                 ref={lastVideoElementRef}

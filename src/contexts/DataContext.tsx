@@ -6,6 +6,7 @@ type FetchedVideoData = {
   title: string;
   description: string;
   category: string;
+  categoryId: string;
   channel: {
     name: string;
     id: string;
@@ -18,16 +19,12 @@ type FetchedVideoData = {
   thumbnailUrl: string;
 };
 
-type Data = {
-  popularVideoData: FetchedVideoData[];
-  searchVideoData: FetchedVideoData[];
-};
-
 type State = {
-  data: Data;
+  videoData: FetchedVideoData[];
   isLoading: boolean;
   action: string;
   selectedCategory: string;
+  selectedCategoryId: string | null;
   searchTerm: string;
   nextPageToken: string | null;
 };
@@ -37,26 +34,23 @@ type Action =
   | { type: "SET_NEW_SEARCH_TERM"; payload: string }
   | { type: "SET_NEXT_PAGE_TOKEN"; payload: string }
   | { type: "SET_NEW_ACTION"; payload: string }
-  | { type: "SET_SELECTED_CATEGORY"; payload: string }
-  | { type: "SET_POPULAR_VIDEO_DATA"; payload: FetchedVideoData[] }
-  | { type: "SET_SEARCHED_DATA"; payload: FetchedVideoData[] }
   | {
-      type: "LOAD_MORE_POPULAR_VIDEO_DATA";
+      type: "SET_SELECTED_CATEGORY";
+      payload: { category: string; categoryId: string };
+    }
+  | { type: "SET_VIDEO_DATA"; payload: FetchedVideoData[] }
+  | {
+      type: "LOAD_MORE_VIDEO_DATA";
       payload: { processedData: FetchedVideoData[]; nextToken: string };
     }
-  | {
-      type: "LOAD_MORE_SEARCH_VIDEO_DATA";
-      payload: { processedData: FetchedVideoData[]; nextToken: string };
-    };
+  | { type: "CLEAR_VIDEO_DATA" };
 
 const initialState: State = {
-  data: {
-    popularVideoData: [],
-    searchVideoData: [],
-  },
+  videoData: [],
   isLoading: true,
   action: "POPULAR",
   selectedCategory: "All",
+  selectedCategoryId: null,
   searchTerm: "",
   nextPageToken: null,
 };
@@ -72,40 +66,27 @@ function dataReducer(state: State, action: Action): State {
     case "SET_NEW_ACTION":
       return { ...state, action: action.payload };
     case "SET_SELECTED_CATEGORY":
-      return { ...state, selectedCategory: action.payload };
-    case "SET_POPULAR_VIDEO_DATA":
       return {
         ...state,
-        data: { ...state.data, popularVideoData: action.payload },
+        selectedCategory: action.payload.category,
+        selectedCategoryId: action.payload.categoryId,
       };
-    case "SET_SEARCHED_DATA":
+    case "SET_VIDEO_DATA":
       return {
         ...state,
-        data: { ...state.data, searchVideoData: action.payload },
+        videoData: [...action.payload],
       };
-    case "LOAD_MORE_POPULAR_VIDEO_DATA":
+
+    case "LOAD_MORE_VIDEO_DATA":
       return {
         ...state,
-        data: {
-          ...state.data,
-          popularVideoData: [
-            ...state.data.popularVideoData,
-            ...action.payload.processedData,
-          ],
-        },
+        videoData: [...state.videoData, ...action.payload.processedData],
         nextPageToken: action.payload.nextToken,
       };
-    case "LOAD_MORE_SEARCH_VIDEO_DATA":
+    case "CLEAR_VIDEO_DATA":
       return {
         ...state,
-        data: {
-          ...state.data,
-          searchVideoData: [
-            ...state.data.searchVideoData,
-            ...action.payload.processedData,
-          ],
-        },
-        nextPageToken: action.payload.nextToken,
+        videoData: [],
       };
     default:
       return state;
@@ -129,9 +110,10 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
     const fetchData = async () => {
       try {
         const { processedData, nextToken } = await fetchPopularVideoData(
-          state.nextPageToken
+          state.nextPageToken,
+          state.selectedCategoryId
         );
-        dispatch({ type: "SET_POPULAR_VIDEO_DATA", payload: processedData });
+        dispatch({ type: "SET_VIDEO_DATA", payload: processedData });
         dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
       } catch (error) {
         if (error instanceof Error) {
@@ -150,10 +132,11 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
         try {
           dispatch({ type: "SET_LOADING", payload: true });
           const { processedData, nextToken } = await fetchPopularVideoData(
-            state.nextPageToken
+            state.nextPageToken,
+            state.selectedCategoryId
           );
           dispatch({
-            type: "LOAD_MORE_POPULAR_VIDEO_DATA",
+            type: "LOAD_MORE_VIDEO_DATA",
             payload: { processedData, nextToken },
           });
         } catch (error) {
@@ -176,7 +159,7 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
             state.nextPageToken
           );
           dispatch({
-            type: "LOAD_MORE_SEARCH_VIDEO_DATA",
+            type: "LOAD_MORE_VIDEO_DATA",
             payload: { processedData, nextToken },
           });
         } catch (error) {

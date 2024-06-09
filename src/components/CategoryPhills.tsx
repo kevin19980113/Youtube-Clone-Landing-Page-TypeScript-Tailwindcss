@@ -2,25 +2,34 @@ import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Button } from "./Button";
 import { useEffect, useRef, useState } from "react";
 import ResizeObserver from "resize-observer-polyfill";
+import { useDataContext } from "../hooks/useDataContext";
+import { fetchPopularVideoData, fetchSearchVideoData } from "../utils/http";
 
 const TRANSLATE_AMOUNT = 300;
 
-type CategoryPhillsProps = {
-  categories: string[];
-  selectedCategory: string;
-  onSelectCategory: (category: string) => void;
-};
-
-export function CategoryPills({
-  categories,
-  selectedCategory,
-  onSelectCategory,
-}: CategoryPhillsProps) {
+export function CategoryPills() {
   const [isLeftVisible, setIsLeftVisible] = useState(false);
   const [isRightVisible, setIsRightVisible] = useState(false);
   const [translate, setTranslate] = useState(0);
   const [actualWidth, setActualWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { state, dispatch } = useDataContext();
+
+  const categories = [
+    { id: "all", name: "All" },
+    ...Array.from(
+      new Map(
+        state.videoData.map((videoData) => [
+          videoData.categoryId,
+          {
+            id: videoData.categoryId,
+            name: videoData.category,
+          },
+        ])
+      ).values()
+    ),
+  ];
 
   useEffect(() => {
     if (containerRef.current == null) return;
@@ -45,6 +54,60 @@ export function CategoryPills({
     };
   });
 
+  async function handleSelectCategory(category: string, categoryId: string) {
+    if (category === "All") {
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "CLEAR_VIDEO_DATA" });
+
+        const { processedData, nextToken } =
+          state.action === "POPULAR"
+            ? await fetchPopularVideoData(null, null)
+            : await fetchSearchVideoData(state.searchTerm, null, null);
+        dispatch({ type: "SET_VIDEO_DATA", payload: processedData });
+        dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
+      } catch (error) {
+        if (error instanceof Error) {
+          console.log(error.message);
+        }
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+        dispatch({
+          type: "SET_SELECTED_CATEGORY",
+          payload: { category, categoryId },
+        });
+      }
+      return;
+    }
+
+    try {
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "CLEAR_VIDEO_DATA" });
+
+      const { processedData, nextToken } =
+        state.action === "POPULAR"
+          ? await fetchPopularVideoData(state.nextPageToken, categoryId)
+          : await fetchSearchVideoData(
+              state.searchTerm,
+              state.nextPageToken,
+              categoryId
+            );
+
+      dispatch({ type: "SET_VIDEO_DATA", payload: processedData });
+      dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      }
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
+      dispatch({
+        type: "SET_SELECTED_CATEGORY",
+        payload: { category: category, categoryId: categoryId },
+      });
+    }
+  }
+
   return (
     <div className="overflow-x-hidden relative" ref={containerRef}>
       <div
@@ -55,12 +118,14 @@ export function CategoryPills({
       >
         {categories.map((category) => (
           <Button
-            key={category}
-            variant={selectedCategory === category ? "dark" : "default"}
-            onClick={() => onSelectCategory(category)}
+            key={category.id}
+            variant={
+              state.selectedCategory === category.name ? "dark" : "default"
+            }
+            onClick={() => handleSelectCategory(category.name, category.id)}
             className="py-1 px-3 rounded-lg whitespace-nowrap"
           >
-            {category}
+            {category.name}
           </Button>
         ))}
       </div>

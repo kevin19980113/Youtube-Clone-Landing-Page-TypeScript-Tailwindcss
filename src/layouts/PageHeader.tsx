@@ -24,14 +24,16 @@ export function PageHeader() {
 
     try {
       dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "CLEAR_VIDEO_DATA" });
       dispatch({ type: "SET_NEW_ACTION", payload: "SEARCH" });
 
       const { processedData, nextToken } = await fetchSearchVideoData(
         searchTerm,
+        null,
         null
       );
 
-      dispatch({ type: "SET_SEARCHED_DATA", payload: processedData });
+      dispatch({ type: "SET_VIDEO_DATA", payload: processedData });
       dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
       dispatch({ type: "SET_NEW_SEARCH_TERM", payload: searchTerm });
     } catch (error) {
@@ -40,7 +42,10 @@ export function PageHeader() {
       }
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
-      dispatch({ type: "SET_SELECTED_CATEGORY", payload: "All" });
+      dispatch({
+        type: "SET_SELECTED_CATEGORY",
+        payload: { category: "All", categoryId: "All" },
+      });
     }
   }
 
