@@ -6,7 +6,8 @@ import LoadingGridItem from "../components/LoadingGridItem";
 import { SearchResultsGridItem } from "../components/SearchResultsGridItem";
 
 export default function VideoGridItemWrapper() {
-  const { data, isLoading, loadMoreData, action } = useDataContext();
+  const { state, loadMoreData } = useDataContext();
+  const { data, isLoading, action } = state;
   const lastCardObserver = useRef<IntersectionObserver | null>(null);
 
   const lastVideoElementRef = useCallback(

@@ -14,14 +14,7 @@ import { useDataContext } from "../contexts/DataContext";
 export function PageHeader() {
   const [showfullWidthSearch, setshowfullWidthSearch] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const {
-    setSearchedData,
-    setLoading,
-    setNextPageToken,
-    setNewAction,
-    setNewSearchTerm,
-    setSelectedCategory,
-  } = useDataContext();
+  const { dispatch } = useDataContext();
 
   async function searchHandler(e: FormEvent) {
     e.preventDefault();
@@ -30,24 +23,24 @@ export function PageHeader() {
     if (searchTerm == null) return;
 
     try {
-      setLoading(true);
-      setNewAction("SEARCH");
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "SET_NEW_ACTION", payload: "SEARCH" });
 
       const { processedData, nextToken } = await fetchSearchVideoData(
         searchTerm,
         null
       );
 
-      setSearchedData(processedData);
-      setNextPageToken(nextToken);
-      setNewSearchTerm(searchTerm);
+      dispatch({ type: "SET_SEARCHED_DATA", payload: processedData });
+      dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
+      dispatch({ type: "SET_NEW_SEARCH_TERM", payload: searchTerm });
     } catch (error) {
       if (error instanceof Error) {
         console.log(error.message);
       }
     } finally {
-      setLoading(false);
-      setSelectedCategory("All");
+      dispatch({ type: "SET_LOADING", payload: false });
+      dispatch({ type: "SET_SELECTED_CATEGORY", payload: "All" });
     }
   }
 

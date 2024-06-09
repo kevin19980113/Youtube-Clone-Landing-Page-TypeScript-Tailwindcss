@@ -2,30 +2,25 @@ import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Button } from "./Button";
 import { useEffect, useRef, useState } from "react";
 import ResizeObserver from "resize-observer-polyfill";
-import { useDataContext } from "../contexts/DataContext";
 
 const TRANSLATE_AMOUNT = 300;
 
-export function CategoryPills() {
+type CategoryPhillsProps = {
+  categories: string[];
+  selectedCategory: string;
+  onSelectCategory: (category: string) => void;
+};
+
+export function CategoryPills({
+  categories,
+  selectedCategory,
+  onSelectCategory,
+}: CategoryPhillsProps) {
   const [isLeftVisible, setIsLeftVisible] = useState(false);
   const [isRightVisible, setIsRightVisible] = useState(false);
   const [translate, setTranslate] = useState(0);
   const [actualWidth, setActualWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const { data, action, selectedCategory, setSelectedCategory } =
-    useDataContext();
-
-  const categories = [
-    "All",
-    ...Array.from(
-      new Set(
-        action === "POPULAR"
-          ? data.popularVideoData.map((videoData) => videoData.category)
-          : data.searchVideoData.map((videoData) => videoData.category)
-      )
-    ),
-  ];
 
   useEffect(() => {
     if (containerRef.current == null) return;
@@ -62,7 +57,7 @@ export function CategoryPills() {
           <Button
             key={category}
             variant={selectedCategory === category ? "dark" : "default"}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => onSelectCategory(category)}
             className="py-1 px-3 rounded-lg whitespace-nowrap"
           >
             {category}

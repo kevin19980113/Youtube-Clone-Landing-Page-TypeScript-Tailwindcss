@@ -1,7 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
-  useState,
+  useReducer,
   useContext,
   ReactNode,
   useEffect,
@@ -30,164 +29,176 @@ type Data = {
   searchVideoData: FetchedVideoData[];
 };
 
-type DataContextType = {
+type State = {
   data: Data;
   isLoading: boolean;
   action: string;
   selectedCategory: string;
-  setLoading: (loading: boolean) => void;
-  setSearchedData: (searchedData: FetchedVideoData[]) => void;
-  setNewSearchTerm: (searchTerm: string) => void;
-  setNextPageToken: (newToken: string) => void;
-  setNewAction: (newAction: string) => void;
-  setSelectedCategory: (selectedCategory: string) => void;
-  loadMoreData: () => void;
+  searchTerm: string;
+  nextPageToken: string | null;
 };
 
-const DataContext = createContext({} as DataContextType);
+type Action =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_NEW_SEARCH_TERM"; payload: string }
+  | { type: "SET_NEXT_PAGE_TOKEN"; payload: string }
+  | { type: "SET_NEW_ACTION"; payload: string }
+  | { type: "SET_SELECTED_CATEGORY"; payload: string }
+  | { type: "SET_POPULAR_VIDEO_DATA"; payload: FetchedVideoData[] }
+  | { type: "SET_SEARCHED_DATA"; payload: FetchedVideoData[] }
+  | {
+      type: "LOAD_MORE_POPULAR_VIDEO_DATA";
+      payload: { processedData: FetchedVideoData[]; nextToken: string };
+    }
+  | {
+      type: "LOAD_MORE_SEARCH_VIDEO_DATA";
+      payload: { processedData: FetchedVideoData[]; nextToken: string };
+    };
+
+const initialState: State = {
+  data: {
+    popularVideoData: [],
+    searchVideoData: [],
+  },
+  isLoading: true,
+  action: "POPULAR",
+  selectedCategory: "All",
+  searchTerm: "",
+  nextPageToken: null,
+};
+
+function dataReducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoading: action.payload };
+    case "SET_NEW_SEARCH_TERM":
+      return { ...state, searchTerm: action.payload };
+    case "SET_NEXT_PAGE_TOKEN":
+      return { ...state, nextPageToken: action.payload };
+    case "SET_NEW_ACTION":
+      return { ...state, action: action.payload };
+    case "SET_SELECTED_CATEGORY":
+      return { ...state, selectedCategory: action.payload };
+    case "SET_POPULAR_VIDEO_DATA":
+      return {
+        ...state,
+        data: { ...state.data, popularVideoData: action.payload },
+      };
+    case "SET_SEARCHED_DATA":
+      return {
+        ...state,
+        data: { ...state.data, searchVideoData: action.payload },
+      };
+    case "LOAD_MORE_POPULAR_VIDEO_DATA":
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          popularVideoData: [
+            ...state.data.popularVideoData,
+            ...action.payload.processedData,
+          ],
+        },
+        nextPageToken: action.payload.nextToken,
+      };
+    case "LOAD_MORE_SEARCH_VIDEO_DATA":
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          searchVideoData: [
+            ...state.data.searchVideoData,
+            ...action.payload.processedData,
+          ],
+        },
+        nextPageToken: action.payload.nextToken,
+      };
+    default:
+      return state;
+  }
+}
+
+const DataContext = createContext<{
+  state: State;
+  dispatch: React.Dispatch<Action>;
+  loadMoreData: () => void;
+}>({ state: initialState, dispatch: () => null, loadMoreData: () => null });
 
 type DataContextProviderProps = {
   children: ReactNode;
 };
 
 export function DataContextProvider({ children }: DataContextProviderProps) {
-  const [data, setData] = useState<Data>({
-    popularVideoData: [],
-    searchVideoData: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [nextPageToken, setNewToken] = useState<string | null>(null);
-  const [action, setAction] = useState<string>("POPULAR");
-  const [selectedCategory, setCategory] = useState<string>("All");
+  const [state, dispatch] = useReducer(dataReducer, initialState);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { processedData, nextToken } = await fetchPopularVideoData(
-          nextPageToken
+          state.nextPageToken
         );
-        setData((prevData) => {
-          return {
-            ...prevData,
-            popularVideoData: [...processedData],
-          };
-        });
-        setNewToken(nextToken);
+        dispatch({ type: "SET_POPULAR_VIDEO_DATA", payload: processedData });
+        dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
       } catch (error) {
         if (error instanceof Error) {
           console.log(error.message);
         }
       } finally {
-        setIsLoading(false);
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     };
     fetchData();
   }, []);
 
-  function setSearchedData(searchedData: FetchedVideoData[]) {
-    setData((prevData) => {
-      return {
-        ...prevData,
-        searchVideoData: [...searchedData],
-      };
-    });
-  }
-
-  function setLoading(loading: boolean) {
-    setIsLoading(loading);
-  }
-
-  function setNextPageToken(newToken: string) {
-    setNewToken(newToken);
-  }
-
-  function setNewSearchTerm(searchTerm: string) {
-    setSearchTerm(searchTerm);
-  }
-
-  function setNewAction(newAction: string) {
-    setAction(newAction);
-  }
-
-  function setSelectedCategory(selectedCategory: string) {
-    setCategory(selectedCategory);
-  }
-
-  function loadMoreData() {
-    if (action === "POPULAR") {
+  const loadMoreData = () => {
+    if (state.action === "POPULAR") {
       const fetchData = async () => {
         try {
-          setIsLoading(true);
+          dispatch({ type: "SET_LOADING", payload: true });
           const { processedData, nextToken } = await fetchPopularVideoData(
-            nextPageToken
+            state.nextPageToken
           );
-
-          setData((prevData) => {
-            return {
-              ...prevData,
-              popularVideoData: [
-                ...prevData.popularVideoData,
-                ...processedData,
-              ],
-            };
+          dispatch({
+            type: "LOAD_MORE_POPULAR_VIDEO_DATA",
+            payload: { processedData, nextToken },
           });
-          setNewToken(nextToken);
         } catch (error) {
           if (error instanceof Error) {
             console.log(error.message);
           }
         } finally {
-          setIsLoading(false);
+          dispatch({ type: "SET_LOADING", payload: false });
         }
       };
       fetchData();
     }
 
-    if (action === "SEARCH") {
+    if (state.action === "SEARCH") {
       const fetchData = async () => {
         try {
-          setIsLoading(true);
+          dispatch({ type: "SET_LOADING", payload: true });
           const { processedData, nextToken } = await fetchSearchVideoData(
-            searchTerm,
-            nextPageToken
+            state.searchTerm,
+            state.nextPageToken
           );
-
-          setData((prevData) => {
-            return {
-              ...prevData,
-              searchVideoData: [...prevData.searchVideoData, ...processedData],
-            };
+          dispatch({
+            type: "LOAD_MORE_SEARCH_VIDEO_DATA",
+            payload: { processedData, nextToken },
           });
-          setNewToken(nextToken);
         } catch (error) {
           if (error instanceof Error) {
             console.log(error.message);
           }
         } finally {
-          setIsLoading(false);
+          dispatch({ type: "SET_LOADING", payload: false });
         }
       };
       fetchData();
     }
-  }
-
-  const dataContextValue = {
-    data,
-    isLoading,
-    action,
-    selectedCategory,
-    setNewSearchTerm,
-    setSearchedData,
-    setNextPageToken,
-    setLoading,
-    setNewAction,
-    setSelectedCategory,
-    loadMoreData,
   };
 
   return (
-    <DataContext.Provider value={dataContextValue}>
+    <DataContext.Provider value={{ state, dispatch, loadMoreData }}>
       {children}
     </DataContext.Provider>
   );
