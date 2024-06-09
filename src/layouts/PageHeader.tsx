@@ -9,7 +9,7 @@ import { FormEvent, useRef, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import { useSidebarContext } from "../contexts/SidebarContext";
 import { fetchSearchVideoData } from "../utils/http";
-import { useDataContext } from "../contexts/DataContext";
+import { useDataContext } from "../hooks/useDataContext";
 
 export function PageHeader() {
   const [showfullWidthSearch, setshowfullWidthSearch] = useState(false);

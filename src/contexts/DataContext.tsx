@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useReducer,
-  useContext,
-  ReactNode,
-  useEffect,
-} from "react";
+import { createContext, useReducer, ReactNode, useEffect } from "react";
 import { fetchPopularVideoData, fetchSearchVideoData } from "../utils/http";
 
 type FetchedVideoData = {
@@ -118,7 +112,7 @@ function dataReducer(state: State, action: Action): State {
   }
 }
 
-const DataContext = createContext<{
+export const DataContext = createContext<{
   state: State;
   dispatch: React.Dispatch<Action>;
   loadMoreData: () => void;
@@ -202,8 +196,4 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
       {children}
     </DataContext.Provider>
   );
-}
-
-export function useDataContext() {
-  return useContext(DataContext);
 }

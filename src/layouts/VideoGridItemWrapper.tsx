@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { PopularVideoGridItem } from "../components/PopularVideoGridItem";
-import { useDataContext } from "../contexts/DataContext";
+import { useDataContext } from "../hooks/useDataContext";
 import { maxSearchResults } from "../utils/http";
 import LoadingGridItem from "../components/LoadingGridItem";
 import { SearchResultsGridItem } from "../components/SearchResultsGridItem";
