@@ -1,12 +1,13 @@
-const API_KEY = "AIzaSyCOu-zWE1ECBaQKyhf3_gEM72sIzZ55djo";
+const API_KEY = import.meta.env.VITE_REACT_APP_API_KEY;
 const API_URL_FOR_VIDEO = "https://www.googleapis.com/youtube/v3/videos";
 const API_URL_FOR_CHANNEL = "https://www.googleapis.com/youtube/v3/channels";
 const API_URL_FOR_SEARCH = "https://www.googleapis.com/youtube/v3/search";
 
-export const maxSearchResults = 10;
+export const maxSearchResults = 15;
 
 type VideoSnippet = {
   title: string;
+  description: string;
   channelTitle: string;
   channelId: string;
   publishedAt: Date;
@@ -32,6 +33,12 @@ type VideoData = {
   statistics: videoStatistics;
 };
 
+type videoOriginData = {
+  items: VideoData[];
+  nextPageToken: string;
+  error: Error;
+};
+
 type ChannelSnippet = {
   customUrl: string;
   thumbnails: {
@@ -46,11 +53,6 @@ type ChannelData = {
   snippet: ChannelSnippet;
 };
 
-type videoOriginData = {
-  items: VideoData[];
-  error: Error;
-};
-
 type SearchedData = {
   items: {
     id: {
@@ -60,31 +62,57 @@ type SearchedData = {
       channelId: string;
     };
   }[];
+  nextPageToken: string;
 };
 
-function dataProcessor(videos: VideoData[], channels: ChannelData[]) {
-  return videos.map((video) => {
-    const channel = channels.find((ch) => ch.id === video.snippet.channelId);
-    return {
-      id: video.id,
-      title: video.snippet.title,
-      channel: {
-        name: video.snippet.channelTitle,
-        id: video.snippet.channelId,
-        profileThumbnailUrl: channel?.snippet.thumbnails.default.url,
-        channelUrl: channel?.snippet.customUrl,
-      },
-      views: video.statistics.viewCount,
-      postedAt: new Date(video.snippet.publishedAt),
-      duration: video.contentDetails.duration,
-      thumbnailUrl: video.snippet.thumbnails.medium.url,
-    };
-  });
+function dataProcessor(
+  videos: VideoData[],
+  channels: ChannelData[]
+): {
+  id: string;
+  title: string;
+  description: string;
+  channel: {
+    name: string;
+    id: string;
+    profileThumbnailUrl: string;
+    channelUrl: string;
+  };
+  views: string;
+  postedAt: Date;
+  duration: string;
+  thumbnailUrl: string;
+}[] {
+  return videos
+    .map((video) => {
+      const channel = channels.find((ch) => ch.id === video.snippet.channelId);
+      if (channel !== undefined) {
+        return {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          channel: {
+            name: video.snippet.channelTitle,
+            id: video.snippet.channelId,
+            profileThumbnailUrl: channel.snippet.thumbnails.default.url,
+            channelUrl: channel.snippet.customUrl,
+          },
+          views: video.statistics.viewCount,
+          postedAt: new Date(video.snippet.publishedAt),
+          duration: video.contentDetails.duration,
+          thumbnailUrl: video.snippet.thumbnails.medium.url,
+        };
+      }
+      return undefined;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
 }
 
-export async function fetchPopularVideoData() {
+export async function fetchPopularVideoData(nextPageToken: string | null) {
   const response = await fetch(
-    `${API_URL_FOR_VIDEO}?part=statistics&part=contentDetails&part=snippet&chart=mostPopular&maxResults=${maxSearchResults}&key=${API_KEY}`
+    `${API_URL_FOR_VIDEO}?part=statistics&part=contentDetails&part=snippet&chart=mostPopular${
+      nextPageToken ? `&pageToken=${nextPageToken}` : ""
+    }&maxResults=${maxSearchResults}&key=${API_KEY}`
   );
 
   const videoData = (await response.json()) as videoOriginData;
@@ -95,7 +123,7 @@ export async function fetchPopularVideoData() {
 
   const channelIds = videoData.items.map((video) => video.snippet.channelId);
 
-  const promises = channelIds.map((channelId) =>
+  const channelPromises = channelIds.map((channelId) =>
     fetch(
       `${API_URL_FOR_CHANNEL}?part=snippet&id=${channelId}&key=${API_KEY}`
     ).then((response) => {
@@ -106,20 +134,25 @@ export async function fetchPopularVideoData() {
     })
   );
 
-  const responses = await Promise.all(promises);
+  const channelResponses = await Promise.all(channelPromises);
 
-  const channelData = responses.flatMap(
+  const channelData = channelResponses.flatMap(
     (response) => response.items
   ) as ChannelData[];
 
   const processedData = dataProcessor(videoData.items, channelData);
 
-  return processedData;
+  return { processedData, nextToken: videoData.nextPageToken };
 }
 
-export async function fetchSearchVideoData(searchTerm: string) {
+export async function fetchSearchVideoData(
+  searchTerm: string,
+  nextPageToken: string | null
+) {
   const response = await fetch(
-    `${API_URL_FOR_SEARCH}?part=snippet&maxResults=${maxSearchResults}&q=${searchTerm}&type=video&key=${API_KEY}`
+    `${API_URL_FOR_SEARCH}?part=snippet${
+      nextPageToken ? `&pageToken=${nextPageToken}` : ""
+    }&maxResults=${maxSearchResults}&q=${searchTerm}&type=video&key=${API_KEY}`
   );
   const searchedData = (await response.json()) as SearchedData;
 
@@ -163,13 +196,13 @@ export async function fetchSearchVideoData(searchTerm: string) {
     })
   );
 
-  const responses = await Promise.all(channelPromises);
+  const channelResponses = await Promise.all(channelPromises);
 
-  const channelData = responses.flatMap(
+  const channelData = channelResponses.flatMap(
     (response) => response.items
   ) as ChannelData[];
 
   const processedData = dataProcessor(videoData, channelData);
 
-  return processedData;
+  return { processedData, nextToken: searchedData.nextPageToken };
 }

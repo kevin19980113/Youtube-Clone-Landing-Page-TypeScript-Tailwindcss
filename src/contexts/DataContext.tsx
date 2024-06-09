@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useState,
@@ -5,17 +6,17 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-import { fetchPopularVideoData } from "../utils/http";
-import { maxSearchResults } from "../utils/http";
+import { fetchPopularVideoData, fetchSearchVideoData } from "../utils/http";
 
-type FetchedData = {
+type FetchedVideoData = {
   id: string;
   title: string;
+  description: string;
   channel: {
     name: string;
     id: string;
-    profileThumbnailUrl: string | undefined;
-    channelUrl: string | undefined;
+    profileThumbnailUrl: string;
+    channelUrl: string;
   };
   views: string;
   postedAt: Date;
@@ -23,11 +24,21 @@ type FetchedData = {
   thumbnailUrl: string;
 };
 
+type Data = {
+  popularVideoData: FetchedVideoData[];
+  searchVideoData: FetchedVideoData[];
+};
+
 type DataContextType = {
-  data: FetchedData[];
+  data: Data;
   isLoading: boolean;
-  setFetchedData: (searchedData: FetchedData[]) => void;
+  action: string;
   setLoading: (loading: boolean) => void;
+  setSearchedData: (searchedData: FetchedVideoData[]) => void;
+  setNewSearchTerm: (searchTerm: string) => void;
+  setNextPageToken: (newToken: string) => void;
+  setNewAction: (newAction: string) => void;
+  loadMoreData: () => void;
 };
 
 const DataContext = createContext({} as DataContextType);
@@ -37,17 +48,29 @@ type DataContextProviderProps = {
 };
 
 export function DataContextProvider({ children }: DataContextProviderProps) {
-  const [data, setData] = useState<FetchedData[]>(
-    new Array(maxSearchResults).fill(null)
-  );
+  const [data, setData] = useState<Data>({
+    popularVideoData: [],
+    searchVideoData: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [nextPageToken, setNewToken] = useState<string | null>(null);
+  const [action, setAction] = useState<string>("POPULAR");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const fetchedData = await fetchPopularVideoData();
+        const { processedData, nextToken } = await fetchPopularVideoData(
+          nextPageToken
+        );
 
-        setData(fetchedData);
+        setData((prevData) => {
+          return {
+            ...prevData,
+            popularVideoData: [...processedData],
+          };
+        });
+        setNewToken(nextToken);
       } catch (error) {
         if (error instanceof Error) {
           console.log(error.message);
@@ -59,19 +82,99 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
     fetchData();
   }, []);
 
-  function setFetchedData(searchedData: FetchedData[]) {
-    setData(searchedData);
+  function setSearchedData(searchedData: FetchedVideoData[]) {
+    setData((prevData) => {
+      return {
+        ...prevData,
+        searchVideoData: [...searchedData],
+      };
+    });
   }
 
   function setLoading(loading: boolean) {
     setIsLoading(loading);
   }
 
+  function setNextPageToken(newToken: string) {
+    setNewToken(newToken);
+  }
+
+  function setNewSearchTerm(searchTerm: string) {
+    setSearchTerm(searchTerm);
+  }
+
+  function setNewAction(newAction: string) {
+    setAction(newAction);
+  }
+
+  function loadMoreData() {
+    if (action === "POPULAR") {
+      const fetchData = async () => {
+        try {
+          setIsLoading(true);
+          const { processedData, nextToken } = await fetchPopularVideoData(
+            nextPageToken
+          );
+
+          setData((prevData) => {
+            return {
+              ...prevData,
+              popularVideoData: [
+                ...prevData.popularVideoData,
+                ...processedData,
+              ],
+            };
+          });
+          setNewToken(nextToken);
+        } catch (error) {
+          if (error instanceof Error) {
+            console.log(error.message);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
+    }
+
+    if (action === "SEARCH") {
+      const fetchData = async () => {
+        try {
+          setIsLoading(true);
+          const { processedData, nextToken } = await fetchSearchVideoData(
+            searchTerm,
+            nextPageToken
+          );
+
+          setData((prevData) => {
+            return {
+              ...prevData,
+              searchVideoData: [...prevData.searchVideoData, ...processedData],
+            };
+          });
+          setNewToken(nextToken);
+        } catch (error) {
+          if (error instanceof Error) {
+            console.log(error.message);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }
+
   const dataContextValue = {
     data,
     isLoading,
-    setFetchedData,
+    action,
+    setNewSearchTerm,
+    setSearchedData,
+    setNextPageToken,
     setLoading,
+    setNewAction,
+    loadMoreData,
   };
 
   return (

@@ -1,38 +1,31 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { formatDuration } from "../utils/formatDuration";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 
-export type VideoGridItemProps = {
+type PopularVideoGridItemProps = {
   id: string;
   title: string;
   channel: {
     name: string;
     id: string;
-    profileThumbnailUrl: string | undefined;
-    channelUrl: string | undefined;
+    profileThumbnailUrl: string;
+    channelUrl: string;
   };
   views: string;
   postedAt: Date;
   duration: string;
   thumbnailUrl: string;
   //videoUrl: string;
-  isLoading: boolean;
 };
 
-const VIEW_FORMATTER = Intl.NumberFormat(undefined, {
+export const VIEW_FORMATTER = Intl.NumberFormat(undefined, {
   notation: "compact",
 });
 
-export function VideoGridItem({
-  id,
-  title,
-  channel,
-  views,
-  postedAt,
-  duration,
-  thumbnailUrl,
-  isLoading,
-}: VideoGridItemProps) {
+export const PopularVideoGridItem = forwardRef<
+  HTMLDivElement,
+  PopularVideoGridItemProps
+>(({ id, title, channel, views, postedAt, duration, thumbnailUrl }, ref) => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -47,27 +40,8 @@ export function VideoGridItem({
     }
   }, [isVideoPlaying]);
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse flex flex-col gap-2">
-        <div className="aspect-video bg-neutral-400 rounded-lg"></div>
-        <div className="flex gap-2">
-          <div className="size-10 rounded-full bg-neutral-400"></div>
-          <div className="flex flex-col gap-1 w-full">
-            <div className="w-full h-4 bg-neutral-400 rounded-lg"></div>
-            <div className="w-full h-3 bg-neutral-400 rounded-lg"></div>
-            <div className="flex gap-1 w-full">
-              <div className="w-1/2 h-3 bg-neutral-400 rounded-lg"></div>
-              <div className="w-1/2 h-3 bg-neutral-400 rounded-lg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-2">
+    <div ref={ref} className="flex flex-col gap-2">
       <a
         href={`https://www.youtube.com/watch?v=${id}`}
         className="relative aspect-video"
@@ -84,20 +58,20 @@ export function VideoGridItem({
         />
         <div
           className="absolute bottom-1 right-1 bg-secondary-dark text-secondary text-xs
-        px-1 rounded-md"
+          px-1 rounded-md"
         >
           {formatDuration(duration)}
         </div>
 
         {/* <video
-          ref={videoRef}
-          muted
-          playsInline
-          src={videoUrl}
-          className={`block h-full object-cover absolute inset-0 transition-opacity duration-200 delay-200 ${
-            isVideoPlaying ? "opacity-100" : "opacity-0"
-          }`}
-        ></video> */}
+            ref={videoRef}
+            muted
+            playsInline
+            src={videoUrl}
+            className={`block h-full object-cover absolute inset-0 transition-opacity duration-200 delay-200 ${
+              isVideoPlaying ? "opacity-100" : "opacity-0"
+            }`}
+          ></video> */}
       </a>
 
       <div className="flex gap-2">
@@ -132,4 +106,4 @@ export function VideoGridItem({
       </div>
     </div>
   );
-}
+});

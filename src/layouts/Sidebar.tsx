@@ -60,7 +60,7 @@ export function Sidebar() {
     <>
       <aside
         className={
-          "sticky left-0 overflow-y-auto scrollbar-hidden pb-4 flex flex-col ml-1"
+          "hidden sticky left-0 overflow-y-auto scrollbar-hidden pb-4 md:flex flex-col ml-1"
         }
       >
         <SmallSidebarItem Icon={Home} title="Home" url="/" />

@@ -14,7 +14,13 @@ import { useDataContext } from "../contexts/DataContext";
 export function PageHeader() {
   const [showfullWidthSearch, setshowfullWidthSearch] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setFetchedData, setLoading } = useDataContext();
+  const {
+    setSearchedData,
+    setLoading,
+    setNextPageToken,
+    setNewAction,
+    setNewSearchTerm,
+  } = useDataContext();
 
   async function searchHandler(e: FormEvent) {
     e.preventDefault();
@@ -22,16 +28,25 @@ export function PageHeader() {
 
     if (searchTerm == null) return;
 
-    setLoading(true);
     try {
-      const processData = await fetchSearchVideoData(searchTerm);
-      setFetchedData(processData);
+      setLoading(true);
+      setNewAction("SEARCH");
+
+      const { processedData, nextToken } = await fetchSearchVideoData(
+        searchTerm,
+        null
+      );
+
+      setSearchedData(processedData);
+      setNextPageToken(nextToken);
+      setNewSearchTerm(searchTerm);
     } catch (error) {
       if (error instanceof Error) {
         console.log(error.message);
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
