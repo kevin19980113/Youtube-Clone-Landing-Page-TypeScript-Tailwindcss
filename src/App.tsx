@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { Sidebar } from "./layouts/Sidebar";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import VideoGridItemWrapper from "./layouts/VideoGridItemWrapper.tsx";
-import { useDataContext } from "./hooks/useDataContext.ts";
 
 function App() {
   return (

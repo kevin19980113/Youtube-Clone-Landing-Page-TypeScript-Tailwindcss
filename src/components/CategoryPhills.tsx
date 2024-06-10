@@ -1,6 +1,6 @@
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Button } from "./Button";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ResizeObserver from "resize-observer-polyfill";
 import { useDataContext } from "../hooks/useDataContext";
 import { fetchPopularVideoData, fetchSearchVideoData } from "../utils/http";
@@ -16,26 +16,29 @@ export function CategoryPills() {
 
   const { state, dispatch } = useDataContext();
 
-  const categories = [
-    { id: "All", name: "All" },
-    ...Array.from(
-      new Map(
-        state.videoData.map((videoData) => [
-          videoData.categoryId,
-          {
-            id: videoData.categoryId,
-            name: videoData.category,
-          },
-        ])
-      ).values()
-    ),
-  ];
+  const categories = useMemo(
+    () => [
+      { id: "All", name: "All" },
+      ...Array.from(
+        new Map(
+          state.videoData.map((videoData) => [
+            videoData.categoryId,
+            {
+              id: videoData.categoryId,
+              name: videoData.category,
+            },
+          ])
+        ).values()
+      ),
+    ],
+    [state.videoData]
+  );
 
   useEffect(() => {
     if (containerRef.current == null) return;
 
     setActualWidth(containerRef.current.scrollWidth);
-  }, []);
+  }, [categories]);
 
   useEffect(() => {
     if (containerRef.current == null) return;
