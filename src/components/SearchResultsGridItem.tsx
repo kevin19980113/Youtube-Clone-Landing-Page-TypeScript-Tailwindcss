@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useState } from "react";
 import { formatDuration } from "../utils/formatDuration";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { VIEW_FORMATTER } from "./PopularVideoGridItem";
@@ -17,7 +17,6 @@ type SearchResultsGridItem = {
   postedAt: Date;
   duration: string;
   thumbnailUrl: string;
-  //videoUrl: string;
 };
 
 export const SearchResultsGridItem = forwardRef<
@@ -38,18 +37,6 @@ export const SearchResultsGridItem = forwardRef<
     ref
   ) => {
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-      if (videoRef.current == null) return;
-
-      if (isVideoPlaying) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-      }
-    }, [isVideoPlaying]);
 
     return (
       <div ref={ref} className="flex w-full gap-4">
@@ -73,16 +60,6 @@ export const SearchResultsGridItem = forwardRef<
           >
             {formatDuration(duration)}
           </div>
-
-          {/* <video
-            ref={videoRef}
-            muted
-            playsInline
-            src={videoUrl}
-            className={`block h-full object-cover absolute inset-0 transition-opacity duration-200 delay-200 ${
-              isVideoPlaying ? "opacity-100" : "opacity-0"
-            }`}
-          ></video> */}
         </a>
         <div className="flex flex-col gap-0.5 text-secondary-text text-sm">
           <a

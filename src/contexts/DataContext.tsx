@@ -133,7 +133,7 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
           dispatch({ type: "SET_LOADING", payload: true });
           const { processedData, nextToken } = await fetchPopularVideoData(
             state.nextPageToken,
-            state.selectedCategoryId
+            state.selectedCategoryId !== "All" ? state.selectedCategoryId : null
           );
           dispatch({
             type: "LOAD_MORE_VIDEO_DATA",
@@ -156,7 +156,8 @@ export function DataContextProvider({ children }: DataContextProviderProps) {
           dispatch({ type: "SET_LOADING", payload: true });
           const { processedData, nextToken } = await fetchSearchVideoData(
             state.searchTerm,
-            state.nextPageToken
+            state.nextPageToken,
+            state.selectedCategoryId !== "All" ? state.selectedCategoryId : null
           );
           dispatch({
             type: "LOAD_MORE_VIDEO_DATA",

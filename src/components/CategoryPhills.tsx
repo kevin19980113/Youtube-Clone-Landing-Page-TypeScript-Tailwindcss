@@ -17,7 +17,7 @@ export function CategoryPills() {
   const { state, dispatch } = useDataContext();
 
   const categories = [
-    { id: "all", name: "All" },
+    { id: "All", name: "All" },
     ...Array.from(
       new Map(
         state.videoData.map((videoData) => [
@@ -86,12 +86,8 @@ export function CategoryPills() {
 
       const { processedData, nextToken } =
         state.action === "POPULAR"
-          ? await fetchPopularVideoData(state.nextPageToken, categoryId)
-          : await fetchSearchVideoData(
-              state.searchTerm,
-              state.nextPageToken,
-              categoryId
-            );
+          ? await fetchPopularVideoData(null, categoryId)
+          : await fetchSearchVideoData(state.searchTerm, null, categoryId);
 
       dispatch({ type: "SET_VIDEO_DATA", payload: processedData });
       dispatch({ type: "SET_NEXT_PAGE_TOKEN", payload: nextToken });
